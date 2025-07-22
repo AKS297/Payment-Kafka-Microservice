@@ -7,8 +7,12 @@ import com.micro.transefer.service.TransferService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -35,7 +39,7 @@ public class TransferServiceImpl implements TransferService {
         try{
             kafkaTemplate.send(environment.getProperty("withdraw-money-topic","withdraw-money-topic"),withdrawalRequestEvent);
             logger.info("Witdrawal request is sent to kafka");
-
+            callRemoteServce();
             kafkaTemplate.send(environment.getProperty("deposity-money-topic","depositMoney-topic"),depositRequestedEvent);
             logger.info("Deposit request is sent to kafka");
         } catch (Exception e) {
@@ -44,4 +48,18 @@ public class TransferServiceImpl implements TransferService {
         }
         return true;
     }
-}
+
+
+    private ResponseEntity<String> callRemoteServce() throws Exception {
+        String requestUrl = "http://localhost:8082/response/200";
+        ResponseEntity<String> response = restTemplate.exchange(requestUrl, HttpMethod.GET, null, String.class);
+        if (response.getStatusCode().value() == HttpStatus.SERVICE_UNAVAILABLE.value()) {
+            throw new Exception("Destination Microservice not availble");
+        }
+
+        if (response.getStatusCode().value() == HttpStatus.OK.value()) {
+            logger.info("Received response from mock service: " + response.getBody());
+        }
+        return response;
+      }
+    }

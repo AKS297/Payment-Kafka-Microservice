@@ -33,6 +33,7 @@ public class KafkaConsumerConfugerations {
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, JsonDeserializer.class);
         config.put(ConsumerConfig.GROUP_ID_CONFIG,kafkaConsumerGroupId);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES,environment.getProperty("spring.kafka.consumer.properties.spring.json.trusted.packages"));
         return new DefaultKafkaConsumerFactory<>(config);
     }
 }
